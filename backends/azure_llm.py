@@ -1,3 +1,5 @@
+"""Provide Azure OpenAI chat generation for DeepEval via LangChain."""
+
 import os
 
 from deepeval.models import DeepEvalBaseLLM

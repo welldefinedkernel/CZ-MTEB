@@ -1,3 +1,5 @@
+"""Provide Azure OpenAI embeddings for DeepEval via LangChain."""
+
 import os
 
 from deepeval.models import DeepEvalBaseEmbeddingModel
