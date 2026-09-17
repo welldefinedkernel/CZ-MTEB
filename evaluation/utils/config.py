@@ -20,9 +20,6 @@ class RunConfig:  # Evaluation run settings
 # Query language / passage language combinations evaluated by default.
 DEFAULT_MSMARCO_LANGUAGE_PAIRS: tuple[tuple[str, str], ...] = (
     ("cz", "cz"),
-    ("cz", "en"),
-    ("en", "cz"),
-    ("en", "en"),
 )
 
 
