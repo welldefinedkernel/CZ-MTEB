@@ -51,6 +51,13 @@ class CTDCSyntheticConfig:  # CTDC Synthetic dataset settings
 
 
 @dataclass
+class EngramDocsConfig:  # ENGRAM repository QA dataset settings
+    enabled: bool
+    dataset_paths: tuple[Path, ...]  # one retrieval task per dataset.json
+    reranking: RerankingConfig | None = None
+
+
+@dataclass
 class ModelConfig:  # Model settings for evaluation
     name: str
     normalize_embeddings: bool
@@ -75,6 +82,7 @@ class EvaluationConfig:  # Overall evaluation configuration
     run: RunConfig
     msmarco: MSMarcoConfig | None
     ctdc_synthetic: CTDCSyntheticConfig | None
+    engram_docs: EngramDocsConfig | None
     multilingual_mteb: MultilingualMTEBConfig | None
     models: tuple[ModelConfig, ...]
     config_path: Path
@@ -92,6 +100,7 @@ def load_config(config_path: str | Path) -> EvaluationConfig:
     datasets = raw["datasets"]
     msmarco = datasets["msmarco"]
     ctdc_synthetic = datasets["ctdc_synthetic"]
+    engram_docs = datasets.get("engram_docs", {})
     multilingual_mteb = raw.get("mteb", {}).get("multilingual", {})
     models = raw["models"]
 
@@ -130,6 +139,16 @@ def load_config(config_path: str | Path) -> EvaluationConfig:
             reranking=_load_reranking(ctdc_synthetic),
         )
         if _task_active(ctdc_synthetic)
+        else None,
+        engram_docs=EngramDocsConfig(
+            enabled=engram_docs["enabled"],
+            dataset_paths=tuple(
+                _resolve_path(dataset_path, root)
+                for dataset_path in engram_docs["dataset_paths"]
+            ),
+            reranking=_load_reranking(engram_docs),
+        )
+        if engram_docs and _task_active(engram_docs)
         else None,
         multilingual_mteb=MultilingualMTEBConfig(
             enabled=True,

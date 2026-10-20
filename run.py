@@ -7,8 +7,10 @@ from dotenv import load_dotenv
 from mteb.benchmarks.benchmark import Benchmark
 
 from dataloaders.czech_text_document import CzechTextDocumentDatasetLoader
+from dataloaders.engram_docs import EngramDocsDatasetLoader
 from dataloaders.msmarco import MSMarcoDatasetLoader
 from evaluation.tasks.ctdc_retrieval import CTDCSyntheticRetrievalTask
+from evaluation.tasks.engram_docs_retrieval import EngramDocsRetrievalTask
 from evaluation.tasks.msmarco_retrieval import MSMarcoRetrievalTask
 from evaluation.utils.config import load_config
 from evaluation.utils.model_factory import build_model
@@ -32,6 +34,7 @@ def main(args):
     retrieves = (
         (config.msmarco is not None and config.msmarco.enabled)
         or (config.ctdc_synthetic is not None and config.ctdc_synthetic.enabled)
+        or (config.engram_docs is not None and config.engram_docs.enabled)
         or config.multilingual_mteb is not None
     )
     models = (
@@ -116,6 +119,34 @@ def main(args):
                 tasks=tasks,
                 dataset_name="ctdc_synthetic",
                 reranking=config.ctdc_synthetic.reranking,
+            )
+
+    # ENGRAM repository QA evaluation: one task per dataset.json
+    if config.engram_docs:
+        tasks = []
+        for dataset_path in config.engram_docs.dataset_paths:
+            data = EngramDocsDatasetLoader(dataset_path=dataset_path).load()
+            print(
+                f"Loaded ENGRAM dataset '{data.name}' with {len(data.queries)} "
+                f"queries and {len(data.corpus)} corpus documents."
+            )
+            tasks.append(EngramDocsRetrievalTask(dataset_loader=data))
+
+        if config.engram_docs.enabled:
+            run_mteb_retrieval(
+                config=config,
+                tasks=tasks,
+                models=models,
+                dataset_name="engram_docs",
+                benchmark=Benchmark(name="ENGRAM docs (en)", tasks=tasks),
+            )
+
+        if config.engram_docs.reranking:
+            run_mteb_reranking(
+                config=config,
+                tasks=tasks,
+                dataset_name="engram_docs",
+                reranking=config.engram_docs.reranking,
             )
 
     # Official MTEB multilingual retrieval evaluation

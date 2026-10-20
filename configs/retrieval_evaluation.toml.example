@@ -30,6 +30,13 @@
 # reranking_model = "<huggingface-cross-encoder-id>"   # e.g. "jinaai/jina-reranker-v3"
 # reranking_top_k = <int>
 
+[datasets.engram_docs]  # optional section
+# enabled = <true|false>
+# dataset_paths = ["<path-to-engram-dataset.json>"]  # Repo Dataset Builder output, one task per file
+# reranking = <true|false>
+# reranking_model = "<huggingface-cross-encoder-id>"
+# reranking_top_k = <int>
+
 # Reranking notes:
 # - `enabled` runs first-stage retrieval, `reranking` runs the cross-encoder stage.
 #   They are independent, so `enabled = false` with `reranking = true` rescores an

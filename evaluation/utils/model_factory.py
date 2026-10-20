@@ -42,6 +42,20 @@ def _patch_autoprocessor_tokenizer_fallback() -> None:
     _AUTOPROCESSOR_FALLBACK_PATCHED = True
 
 
+def _patch_xlm_roberta_position_ids() -> None:
+    """Restore the module-level ``create_position_ids_from_input_ids``.
+
+    transformers 5 moved it onto ``XLMRobertaEmbeddings`` as a static method,
+    but jina-reranker-v2's remote code still imports it from the module.
+    """
+    from transformers.models.xlm_roberta import modeling_xlm_roberta
+
+    if not hasattr(modeling_xlm_roberta, "create_position_ids_from_input_ids"):
+        modeling_xlm_roberta.create_position_ids_from_input_ids = (
+            modeling_xlm_roberta.XLMRobertaEmbeddings.create_position_ids_from_input_ids
+        )
+
+
 def _preserve_sharding_during_encode(mteb_model: Any) -> None:
     """Stop ``encode`` from consolidating a multi-GPU sharded model onto one device.
 
@@ -107,6 +121,7 @@ def build_model(config: ModelConfig, device: str) -> Any:
         kwargs["trust_remote_code"] = True
 
     _patch_autoprocessor_tokenizer_fallback()
+    _patch_xlm_roberta_position_ids()
 
     model = mteb.get_model(config.name, device=device, **kwargs)
     _preserve_sharding_during_encode(model)
